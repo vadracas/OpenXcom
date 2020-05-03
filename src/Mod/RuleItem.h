@@ -193,6 +193,7 @@ struct RuleItemAction
 	int accuracy = 0;
 	int range = 0;
 	int shots = 1;
+	bool followProjectiles = true;
 	int ammoSlot = 0;
 	RuleItemUseCost cost;
 	RuleItemUseCost flat;
@@ -832,6 +833,7 @@ public:
 	/// Gets script.
 	template<typename Script>
 	const typename Script::Container &getScript() const { return _battleItemScripts.get<Script>(); }
+	/// Get all script values.
 	const ScriptValues<RuleItem> &getScriptValuesRaw() const { return _scriptValues; }
 };
 

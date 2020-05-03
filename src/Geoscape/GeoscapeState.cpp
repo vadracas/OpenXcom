@@ -82,6 +82,7 @@
 #include "ItemsArrivingState.h"
 #include "CraftErrorState.h"
 #include "DogfightErrorState.h"
+#include "DogfightExperienceState.h"
 #include "../Ufopaedia/Ufopaedia.h"
 #include "../Savegame/ResearchProject.h"
 #include "ResearchCompleteState.h"
@@ -265,6 +266,7 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnSelectMusicTrackClick, Options::keySelectMusicTrack);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnGlobalProductionClick, Options::keyGeoGlobalProduction);
 	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnGlobalResearchClick, Options::keyGeoGlobalResearch);
+	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnDogfightExperienceClick, Options::keyGeoDailyPilotExperience);
 	_btnIntercept->setGeoscapeButton(true);
 
 	_btnBases->initText(_game->getMod()->getFont("FONT_GEO_BIG"), _game->getMod()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
@@ -2589,6 +2591,40 @@ void GeoscapeState::time1Day()
 	std::for_each(saveGame->getAlienBases()->begin(), saveGame->getAlienBases()->end(),
 			  GenerateSupplyMission(*_game, *_globe));
 
+	// Handle alien base detection (by xcom base facilities).
+	for (auto alienBase : *_game->getSavedGame()->getAlienBases())
+	{
+		if (alienBase->isDiscovered()) continue;
+		for (auto xcomBase : *_game->getSavedGame()->getBases())
+		{
+			int distance = XcomDistance(xcomBase->getDistance(alienBase));
+			for (auto facility : *xcomBase->getFacilities())
+			{
+				if (facility->getBuildTime() == 0 && facility->getRules()->getSightRange() > distance)
+				{
+					int chanceToDetect = facility->getRules()->getSightChance(); // static % defined by the modder
+					if (chanceToDetect == 0)
+					{
+						chanceToDetect = 50 - (distance * 50 / facility->getRules()->getSightRange()); // dynamic 0-50% based on relative distance
+					}
+					if (RNG::percent(chanceToDetect))
+					{
+						alienBase->setDiscovered(true);
+					}
+				}
+			}
+		}
+	}
+
+	// clear the daily dogfight experience cache
+	for (auto* base : *saveGame->getBases())
+	{
+		for (auto* soldier : *base->getSoldiers())
+		{
+			soldier->resetDailyDogfightExperienceCache();
+		}
+	}
+
 	// Autosave 3 times a month
 	int day = saveGame->getTime()->getDay();
 	if (day == 10 || day == 20)
@@ -2808,6 +2844,15 @@ void GeoscapeState::btnGlobalProductionClick(Action *)
 void GeoscapeState::btnGlobalResearchClick(Action *)
 {
 	_game->pushState(new GlobalResearchState(false));
+}
+
+/**
+ * Opens the Dogfight Experience screen.
+ * @param action Pointer to an action.
+ */
+void GeoscapeState::btnDogfightExperienceClick(Action *)
+{
+	_game->pushState(new DogfightExperienceState());
 }
 
 /**

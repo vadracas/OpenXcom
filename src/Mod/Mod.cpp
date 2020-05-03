@@ -354,7 +354,8 @@ Mod::Mod() :
 	_defeatScore(0), _defeatFunds(0), _startingTime(6, 1, 1, 1999, 12, 0, 0), _startingDifficulty(0),
 	_baseDefenseMapFromLocation(0), _disableUnderwaterSounds(false), _enableUnitResponseSounds(false), _pediaReplaceCraftFuelWithRangeType(-1),
 	_facilityListOrder(0), _craftListOrder(0), _itemCategoryListOrder(0), _itemListOrder(0),
-	_researchListOrder(0),  _manufactureListOrder(0), _transformationListOrder(0), _ufopaediaListOrder(0), _invListOrder(0), _soldierListOrder(0), _modCurrent(0), _statePalette(0)
+	_researchListOrder(0),  _manufactureListOrder(0), _soldierBonusListOrder(0), _transformationListOrder(0), _ufopaediaListOrder(0), _invListOrder(0), _soldierListOrder(0),
+	_modCurrent(0), _statePalette(0)
 {
 	_muteMusic = new Music();
 	_muteSound = new Sound();
@@ -945,7 +946,7 @@ Palette *Mod::getPalette(const std::string &name, bool error) const
  * @param firstcolor Offset of the first color to replace.
  * @param ncolors Amount of colors to replace.
  */
-void Mod::setPalette(const SDL_Color *colors, int firstcolor, int ncolors)
+void Mod::setPaletteForAllResources(const SDL_Color *colors, int firstcolor, int ncolors)
 {
 	_statePalette = colors;
 	for (std::map<std::string, Font*>::iterator i = _fonts.begin(); i != _fonts.end(); ++i)
@@ -1421,6 +1422,23 @@ void Mod::loadAll()
 	afterLoadHelper("commendations", this, _commendations, &RuleCommendations::afterLoad);
 	afterLoadHelper("skills", this, _skills, &RuleSkill::afterLoad);
 
+	// check unique listOrder
+	{
+		std::vector<int> tmp;
+		tmp.reserve(_soldierBonus.size());
+		for (auto i : _soldierBonus)
+		{
+			tmp.push_back(i.second->getListOrder());
+		}
+		std::sort(tmp.begin(), tmp.end());
+		auto it = std::unique(tmp.begin(), tmp.end());
+		bool wasUnique = (it == tmp.end());
+		if (!wasUnique)
+		{
+			throw Exception("List order for soldier bonus types must be unique!");
+		}
+	}
+
 	// auto-create alternative manufacture rules
 	for (auto shortcutPair : _manufactureShortcut)
 	{
@@ -1841,7 +1859,8 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 		RuleSoldierBonus *rule = loadRule(*i, &_soldierBonus, &_soldierBonusIndex, "name");
 		if (rule != 0)
 		{
-			rule->load(*i, parsers);
+			_soldierBonusListOrder += 100;
+			rule->load(*i, parsers, _soldierBonusListOrder);
 		}
 	}
 	for (YAML::const_iterator i = doc["soldierTransformation"].begin(); i != doc["soldierTransformation"].end(); ++i)

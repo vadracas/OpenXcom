@@ -64,6 +64,7 @@ private:
 	int _id, _nationality, _improvement, _psiStrImprovement;
 	RuleSoldier *_rules;
 	UnitStats _initialStats, _currentStats, _tmpStatsWithSoldierBonuses, _tmpStatsWithAllBonuses;
+	UnitStats _dailyDogfightExperienceCache;
 	SoldierRank _rank;
 	Craft *_craft;
 	SoldierGender _gender;
@@ -77,7 +78,8 @@ private:
 	Armor *_armor;
 	Armor *_replacedArmor;
 	Armor *_transformedArmor;
-	std::vector<EquipmentLayoutItem*> _equipmentLayout;
+	std::vector<EquipmentLayoutItem*> _equipmentLayout;           // last used equipment layout, managed by the game
+	std::vector<EquipmentLayoutItem*> _personalEquipmentLayout;   // personal  equipment layout, managed by the player
 	SoldierDeath *_death;
 	SoldierDiary *_diary;
 	std::string _statString;
@@ -217,6 +219,7 @@ public:
 
 	/// Gets the soldier's equipment-layout.
 	std::vector<EquipmentLayoutItem*> *getEquipmentLayout();
+	std::vector<EquipmentLayoutItem*> *getPersonalEquipmentLayout() { return &_personalEquipmentLayout; }
 	/// Trains a soldier's psychic stats
 	void trainPsi();
 	/// Trains a soldier's psionic abilities (anytimePsiTraining option).
@@ -271,6 +274,10 @@ public:
 	UnitStats *getStatsWithAllBonuses();
 	/// Pre-calculates soldier stats with various bonuses.
 	bool prepareStatsWithBonuses(const Mod *mod);
+	/// Gets a pointer to the daily dogfight experience cache.
+	UnitStats* getDailyDogfightExperienceCache();
+	/// Resets the daily dogfight experience cache.
+	void resetDailyDogfightExperienceCache();
 
 private:
 	std::string generateCallsign(const std::vector<SoldierNamePool*> &names);

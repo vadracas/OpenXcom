@@ -304,6 +304,7 @@ void RuleItem::loadConfAction(RuleItemAction& a, const YAML::Node& node, const s
 	if (const YAML::Node& conf = node["conf" + name])
 	{
 		a.shots = conf["shots"].as<int>(a.shots);
+		a.followProjectiles = conf["followProjectiles"].as<bool>(a.followProjectiles);
 		a.name = conf["name"].as<std::string>(a.name);
 		loadAmmoSlotChecked(a.ammoSlot, conf["ammoSlot"], _name);
 		a.arcing = conf["arcing"].as<bool>(a.arcing);
@@ -2452,12 +2453,26 @@ int RuleItem::getSprayWaypoints() const
 	return _sprayWaypoints;
 }
 
+
 ////////////////////////////////////////////////////////////
 //					Script binding
 ////////////////////////////////////////////////////////////
 
 namespace
 {
+
+void getTypeScript(const RuleItem* r, ScriptText& txt)
+{
+	if (r)
+	{
+		txt = { r->getType().c_str() };
+		return;
+	}
+	else
+	{
+		txt = ScriptText::empty;
+	}
+}
 
 void getBattleTypeScript(const RuleItem *ri, int &ret)
 {
@@ -2525,6 +2540,8 @@ void RuleItem::ScriptRegister(ScriptParserBase* parser)
 	ri.addCustomConst("BT_FLARE", BT_FLARE);
 	ri.addCustomConst("BT_CORPSE", BT_CORPSE);
 
+	ri.add<&getTypeScript>("getType");
+
 	ri.add<&RuleItem::getAccuracyAimed>("getAccuracyAimed");
 	ri.add<&RuleItem::getAccuracyAuto>("getAccuracyAuto");
 	ri.add<&RuleItem::getAccuracyMelee>("getAccuracyMelee");
@@ -2543,7 +2560,7 @@ void RuleItem::ScriptRegister(ScriptParserBase* parser)
 	ri.add<&RuleItem::isBlockingBothHands>("isBlockingBothHands");
 	ri.add<&isSingleTargetScript>("isSingleTarget");
 
-	ri.addScriptValue<&RuleItem::_scriptValues>(false);
+	ri.addScriptValue<BindBase::OnlyGet, &RuleItem::_scriptValues>();
 	ri.addDebugDisplay<&debugDisplayScript>();
 }
 

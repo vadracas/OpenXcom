@@ -1,6 +1,6 @@
 #pragma once
 /*
- * Copyright 2010-2016 OpenXcom Developers.
+ * Copyright 2010-2020 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,11 +17,33 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "../Engine/State.h"
 
-#define OPENXCOM_VERSION_SHORT "Extended 6.4.6"
-#define OPENXCOM_VERSION_LONG "6.4.6.0"
-#define OPENXCOM_VERSION_NUMBER 6,4,6,0
+namespace OpenXcom
+{
 
-#ifndef OPENXCOM_VERSION_GIT
-#define OPENXCOM_VERSION_GIT " (v2020-04-30)"
-#endif
+class TextButton;
+class Window;
+class Text;
+class TextList;
+
+/**
+ * Displays experience gained by craft pilot(s) during the current day.
+ */
+class DogfightExperienceState : public State
+{
+private:
+	TextButton *_btnOk;
+	Window *_window;
+	Text *_txtTitle, *_txtFiringAcc, *_txtReactions, *_txtBravery, *_txtPilots;
+	TextList *_lstPilots;
+public:
+	/// Creates the DogfightExperienceState.
+	DogfightExperienceState();
+	/// Cleans up the DogfightExperienceState.
+	~DogfightExperienceState() = default;
+	/// Handler for clicking the OK button.
+	void btnOkClick(Action *action);
+};
+
+}

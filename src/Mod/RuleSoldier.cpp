@@ -232,7 +232,7 @@ void RuleSoldier::addSoldierNamePool(const std::string &namFile)
  * this soldier. Each soldier type has a unique name.
  * @return Soldier name.
  */
-std::string RuleSoldier::getType() const
+const std::string& RuleSoldier::getType() const
 {
 	return _type;
 }
@@ -592,8 +592,27 @@ int RuleSoldier::getRankSpriteTiny() const
 	return _rankSpriteTiny;
 }
 
+
+////////////////////////////////////////////////////////////
+//					Script binding
+////////////////////////////////////////////////////////////
+
+
 namespace
 {
+
+void getTypeScript(const RuleSkill* r, ScriptText& txt)
+{
+	if (r)
+	{
+		txt = { r->getType().c_str() };
+		return;
+	}
+	else
+	{
+		txt = ScriptText::empty;
+	}
+}
 
 std::string debugDisplayScript(const RuleSoldier* rs)
 {
@@ -626,7 +645,9 @@ void RuleSoldier::ScriptRegister(ScriptParserBase* parser)
 	UnitStats::addGetStatsScript<&RuleSoldier::_minStats>(ra, "StatsMin.");
 	UnitStats::addGetStatsScript<&RuleSoldier::_maxStats>(ra, "StatsMax.");
 
-	ra.addScriptValue<&RuleSoldier::_scriptValues>(false);
+	ra.add<&getTypeScript>("getType");
+
+	ra.addScriptValue<BindBase::OnlyGet, &RuleSoldier::_scriptValues>();
 	ra.addDebugDisplay<&debugDisplayScript>();
 }
 

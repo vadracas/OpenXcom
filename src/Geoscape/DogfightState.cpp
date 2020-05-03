@@ -1607,6 +1607,10 @@ void DogfightState::update()
 					survived = false; // destroyed on fake water
 				}
 			}
+			if (_ufo->getRules()->isUnmanned())
+			{
+				survived = false; // unmanned UFOs (drones, missiles, etc.) can't be forced to land
+			}
 			if (!survived) // Brought it down over water (and didn't survive splashdown)
 			{
 				finalRun = true;
@@ -2435,6 +2439,7 @@ void DogfightState::awardExperienceToPilots()
 				if (RNG::percent((*it)->getRules()->getDogfightExperience().firing))
 				{
 					(*it)->getCurrentStats()->firing++;
+					(*it)->getDailyDogfightExperienceCache()->firing++;
 				}
 			}
 			if ((*it)->getCurrentStats()->reactions < (*it)->getRules()->getStatCaps().reactions)
@@ -2442,6 +2447,7 @@ void DogfightState::awardExperienceToPilots()
 				if (RNG::percent((*it)->getRules()->getDogfightExperience().reactions))
 				{
 					(*it)->getCurrentStats()->reactions++;
+					(*it)->getDailyDogfightExperienceCache()->reactions++;
 				}
 			}
 			if ((*it)->getCurrentStats()->bravery < (*it)->getRules()->getStatCaps().bravery)
@@ -2449,6 +2455,7 @@ void DogfightState::awardExperienceToPilots()
 				if (RNG::percent((*it)->getRules()->getDogfightExperience().bravery))
 				{
 					(*it)->getCurrentStats()->bravery += 10; // increase by 10 to keep OCD at bay
+					(*it)->getDailyDogfightExperienceCache()->bravery += 10;
 				}
 			}
 		}

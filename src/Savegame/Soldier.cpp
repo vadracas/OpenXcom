@@ -19,6 +19,7 @@
 #include <cmath>
 #include <algorithm>
 #include "Soldier.h"
+#include "../Engine/Collections.h"
 #include "../Engine/RNG.h"
 #include "../Engine/Language.h"
 #include "../Engine/Options.h"
@@ -104,6 +105,7 @@ Soldier::~Soldier()
 	{
 		delete *i;
 	}
+	Collections::deleteAll(_personalEquipmentLayout);
 	delete _death;
 	delete _diary;
 }
@@ -125,6 +127,7 @@ void Soldier::load(const YAML::Node& node, const Mod *mod, SavedGame *save, cons
 	_nationality = node["nationality"].as<int>(_nationality);
 	_initialStats = node["initialStats"].as<UnitStats>(_initialStats);
 	_currentStats = node["currentStats"].as<UnitStats>(_currentStats);
+	_dailyDogfightExperienceCache = node["dailyDogfightExperienceCache"].as<UnitStats>(_dailyDogfightExperienceCache);
 
 	// re-roll mana stats when upgrading saves
 	if (_currentStats.mana == 0 && _rules->getMaxStats().mana > 0)
@@ -180,6 +183,21 @@ void Soldier::load(const YAML::Node& node, const Mod *mod, SavedGame *save, cons
 			}
 		}
 	}
+	if (const YAML::Node &layout = node["personalEquipmentLayout"])
+	{
+		for (YAML::const_iterator i = layout.begin(); i != layout.end(); ++i)
+		{
+			EquipmentLayoutItem *layoutItem = new EquipmentLayoutItem(*i);
+			if (mod->getInventory(layoutItem->getSlot()))
+			{
+				_personalEquipmentLayout.push_back(layoutItem);
+			}
+			else
+			{
+				delete layoutItem;
+			}
+		}
+	}
 	if (node["death"])
 	{
 		_death = new SoldierDeath();
@@ -214,6 +232,10 @@ YAML::Node Soldier::save(const ScriptGlobal *shared) const
 	node["nationality"] = _nationality;
 	node["initialStats"] = _initialStats;
 	node["currentStats"] = _currentStats;
+	if (_dailyDogfightExperienceCache.firing > 0 || _dailyDogfightExperienceCache.reactions > 0 || _dailyDogfightExperienceCache.bravery > 0)
+	{
+		node["dailyDogfightExperienceCache"] = _dailyDogfightExperienceCache;
+	}
 	node["rank"] = (int)_rank;
 	if (_craft != 0)
 	{
@@ -247,6 +269,11 @@ YAML::Node Soldier::save(const ScriptGlobal *shared) const
 	{
 		for (std::vector<EquipmentLayoutItem*>::const_iterator i = _equipmentLayout.begin(); i != _equipmentLayout.end(); ++i)
 			node["equipmentLayout"].push_back((*i)->save());
+	}
+	if (!_personalEquipmentLayout.empty())
+	{
+		for (std::vector<EquipmentLayoutItem*>::const_iterator i = _personalEquipmentLayout.begin(); i != _personalEquipmentLayout.end(); ++i)
+			node["personalEquipmentLayout"].push_back((*i)->save());
 	}
 	if (_death != 0)
 	{
@@ -1259,6 +1286,7 @@ void Soldier::die(SoldierDeath *death)
 	_healthMissing = 0;
 	_recovery = 0.0f;
 	clearEquipmentLayout();
+	Collections::deleteAll(_personalEquipmentLayout);
 }
 
 /**
@@ -1710,7 +1738,18 @@ UnitStats Soldier::calculateStatChanges(const Mod *mod, RuleSoldierTransformatio
 			: transformationSoldierType->getStatCaps();
 		UnitStats cappedChange = upperBound - currentStats;
 
-		statChange = UnitStats::min(statChange, cappedChange);
+		bool isSameSoldierType = (transformationSoldierType == _rules);
+		bool softLimit = transformationRule->isSoftLimit(isSameSoldierType);
+		if (softLimit)
+		{
+			// soft limit
+			statChange = UnitStats::softLimit(statChange, currentStats, upperBound);
+		}
+		else
+		{
+			// hard limit
+			statChange = UnitStats::min(statChange, cappedChange);
+		}
 	}
 
 	return statChange;
@@ -1732,7 +1771,7 @@ const std::vector<const RuleSoldierBonus*> *Soldier::getBonuses(const Mod *mod)
 				return;
 			}
 
-			auto sort = [](const RuleSoldierBonus* l, const RuleSoldierBonus* r){ return l->getName() < r->getName(); };
+			auto sort = [](const RuleSoldierBonus* l, const RuleSoldierBonus* r){ return l->getListOrder() < r->getListOrder(); };
 
 			auto p = std::lower_bound(_bonusCache.begin(), _bonusCache.end(), b, sort);
 			if (p == _bonusCache.end() || *p != b)
@@ -1811,6 +1850,22 @@ bool Soldier::prepareStatsWithBonuses(const Mod *mod)
 	_tmpStatsWithAllBonuses = UnitStats::obeyFixedMinimum(tmp);
 
 	return hasSoldierBonus;
+}
+
+/**
+ * Gets a pointer to the daily dogfight experience cache.
+ */
+UnitStats* Soldier::getDailyDogfightExperienceCache()
+{
+	return &_dailyDogfightExperienceCache;
+}
+
+/**
+ * Resets the daily dogfight experience cache.
+ */
+void Soldier::resetDailyDogfightExperienceCache()
+{
+	_dailyDogfightExperienceCache = UnitStats::scalar(0);
 }
 
 
@@ -1927,6 +1982,7 @@ void Soldier::ScriptRegister(ScriptParserBase* parser)
 	so.add<&Soldier::setHealthMissing>("setHealthMissing");
 
 
+	so.addScriptValue<BindBase::OnlyGet, &Soldier::_rules, &RuleSoldier::getScriptValuesRaw>();
 	so.addScriptValue<&Soldier::_scriptValues>();
 	so.addDebugDisplay<&debugDisplayScript>();
 }

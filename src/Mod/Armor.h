@@ -97,7 +97,7 @@ public:
 	/// Loads the armor data from YAML.
 	void load(const YAML::Node& node, const ModScript& parsers, Mod *mod);
 	/// Gets the armor's type.
-	std::string getType() const;
+	const std::string& getType() const;
 	/// Gets the unit's sprite sheet.
 	std::string getSpriteSheet() const;
 	/// Gets the unit's inventory sprite.
@@ -268,6 +268,7 @@ public:
 	/// Gets script.
 	template<typename Script>
 	const typename Script::Container &getScript() const { return _battleUnitScripts.get<Script>(); }
+	/// Get all script values.
 	const ScriptValues<Armor> &getScriptValuesRaw() const { return _scriptValues; }
 	/// Gets the armor's units.
 	const std::vector<std::string> &getUnits() const;

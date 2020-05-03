@@ -103,7 +103,7 @@ public:
 	/// Cross link with other rules.
 	void afterLoad(const Mod* mod);
 	/// Gets the soldier's type.
-	std::string getType() const;
+	const std::string& getType() const;
 	/// Gets whether or not the soldier type should be displayed in the inventory.
 	bool getShowTypeInInventory() const { return _showTypeInInventory; }
 	/// Gets the list/sort order of the soldier's type.
@@ -204,6 +204,9 @@ public:
 	int getRankSpriteBattlescape() const;
 	/// Gets the offset of the rank sprite in TinyRanks.
 	int getRankSpriteTiny() const;
+
+	/// Get all script values.
+	const ScriptValues<RuleSoldier> &getScriptValuesRaw() const { return _scriptValues; }
 
 	/// How much missing mana will act as "fatal wounds" and prevent the soldier from going into battle.
 	int getManaWoundThreshold() const { return _manaMissingWoundThreshold; }

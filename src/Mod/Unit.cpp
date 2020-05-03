@@ -124,7 +124,7 @@ void Unit::afterLoad(const Mod* mod)
  * this unit. Each unit type has a unique name.
  * @return The unit's name.
  */
-std::string Unit::getType() const
+const std::string& Unit::getType() const
 {
 	return _type;
 }
@@ -414,12 +414,27 @@ bool Unit::getShowFullNameInAlienInventory(Mod *mod) const
 	return mod->getShowFullNameInAlienInventory();
 }
 
+
 ////////////////////////////////////////////////////////////
 //					Script binding
 ////////////////////////////////////////////////////////////
 
 namespace
 {
+
+void getTypeScript(const Unit* r, ScriptText& txt)
+{
+	if (r)
+	{
+		txt = { r->getType().c_str() };
+		return;
+	}
+	else
+	{
+		txt = ScriptText::empty;
+	}
+}
+
 std::string debugDisplayScript(const Unit* unit)
 {
 	if (unit)
@@ -436,10 +451,15 @@ std::string debugDisplayScript(const Unit* unit)
 		return "null";
 	}
 }
-}
+
+} // namespace
+
 void Unit::ScriptRegister(ScriptParserBase* parser)
 {
 	Bind<Unit> un = { parser };
+
+	un.add<&getTypeScript>("getType");
+
 	un.addDebugDisplay<&debugDisplayScript>();
 }
 /**
