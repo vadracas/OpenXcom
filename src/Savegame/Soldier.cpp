@@ -161,6 +161,59 @@ void Soldier::load(const YAML::Node& node, const Mod *mod, SavedGame *save, cons
 	_returnToTrainingWhenHealed = node["returnToTrainingWhenHealed"].as<bool>(_returnToTrainingWhenHealed);
 
 }
+// This is here just to fix older saves, can be removed in year 2020 :)
+if (isWounded())
+	_training = false;
+   else
+		_returnToTrainingWhenHealed = false;
+
+	_improvement = node["improvement"].as<int>(_improvement);
+	_psiStrImprovement = node["psiStrImprovement"].as<int>(_psiStrImprovement);
+	if (const YAML::Node &layout = node["equipmentLayout"])
+	{
+		for (YAML::const_iterator i = layout.begin(); i != layout.end(); ++i)
+		{
+			EquipmentLayoutItem *layoutItem = new EquipmentLayoutItem(*i);
+			if (mod->getInventory(layoutItem->getSlot()))
+			{
+				_equipmentLayout.push_back(layoutItem);
+			}
+			else
+			{
+				delete layoutItem;
+			}
+		}
+	}
+	if (const YAML::Node &layout = node["personalEquipmentLayout"])
+	{
+		for (YAML::const_iterator i = layout.begin(); i != layout.end(); ++i)
+		{
+			EquipmentLayoutItem *layoutItem = new EquipmentLayoutItem(*i);
+			if (mod->getInventory(layoutItem->getSlot()))
+			{
+				_personalEquipmentLayout.push_back(layoutItem);
+			}
+			else
+			{
+				delete layoutItem;
+			}
+		}
+	}
+	if (node["death"])
+	{
+		_death = new SoldierDeath();
+		_death->load(node["death"]);
+	}
+	if (node["diary"])
+	{
+		_diary = new SoldierDiary();
+		_diary->load(node["diary"], mod);
+	}
+	calcStatString(mod->getStatStrings(), (Options::psiStrengthEval && save->isResearched(mod->getPsiRequirements())));
+	_corpseRecovered = node["corpseRecovered"].as<bool>(_corpseRecovered);
+	_previousTransformations = node["previousTransformations"].as<std::map<std::string, int > >(_previousTransformations);
+	_transformationBonuses = node["transformationBonuses"].as<std::map<std::string, int > >(_transformationBonuses);
+	_scriptValues.load(node, shared);
 /**
  * Saves the soldier to a YAML file.
  * @return YAML node.
