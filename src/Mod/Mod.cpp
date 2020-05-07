@@ -149,6 +149,7 @@ int Mod::UNIT_RESPONSE_SOUNDS_FREQUENCY[4];
 bool Mod::EXTENDED_ITEM_RELOAD_COST;
 bool Mod::EXTENDED_RUNNING_COST;
 bool Mod::EXTENDED_HWP_LOAD_ORDER;
+int Mod::EXTENDED_MELEE_REACTIONS;
 
 /// Predefined name for first loaded mod that have all original data
 const std::string ModNameMaster = "master";
@@ -229,6 +230,7 @@ void Mod::resetGlobalStatics()
 	EXTENDED_ITEM_RELOAD_COST = false;
 	EXTENDED_RUNNING_COST = false;
 	EXTENDED_HWP_LOAD_ORDER = false;
+	EXTENDED_MELEE_REACTIONS = 0;
 }
 
 /**
@@ -350,7 +352,7 @@ Mod::Mod() :
 	_alienInventoryOffsetX(80), _alienInventoryOffsetBigUnit(32),
 	_hidePediaInfoButton(false), _extraNerdyPediaInfo(false),
 	_giveScoreAlsoForResearchedArtifacts(false), _statisticalBulletConservation(false), _stunningImprovesMorale(false),
-	_tuRecoveryWakeUpNewTurn(100), _shortRadarRange(0),
+	_tuRecoveryWakeUpNewTurn(100), _shortRadarRange(0), _buildTimeReductionScaling(100),
 	_defeatScore(0), _defeatFunds(0), _startingTime(6, 1, 1, 1999, 12, 0, 0), _startingDifficulty(0),
 	_baseDefenseMapFromLocation(0), _disableUnderwaterSounds(false), _enableUnitResponseSounds(false), _pediaReplaceCraftFuelWithRangeType(-1),
 	_facilityListOrder(0), _craftListOrder(0), _itemCategoryListOrder(0), _itemListOrder(0),
@@ -1648,6 +1650,7 @@ void Mod::loadConstants(const YAML::Node &node)
 	EXTENDED_ITEM_RELOAD_COST = node["extendedItemReloadCost"].as<bool>(EXTENDED_ITEM_RELOAD_COST);
 	EXTENDED_RUNNING_COST = node["extendedRunningCost"].as<bool>(EXTENDED_RUNNING_COST);
 	EXTENDED_HWP_LOAD_ORDER = node["extendedHwpLoadOrder"].as<bool>(EXTENDED_HWP_LOAD_ORDER);
+	EXTENDED_MELEE_REACTIONS = node["extendedMeleeReactions"].as<int>(EXTENDED_MELEE_REACTIONS);
 }
 
 /**
@@ -2084,6 +2087,7 @@ void Mod::loadFile(const FileMap::FileRecord &filerec, ModScript &parsers)
 	_stunningImprovesMorale = doc["stunningImprovesMorale"].as<bool>(_stunningImprovesMorale);
 	_tuRecoveryWakeUpNewTurn = doc["tuRecoveryWakeUpNewTurn"].as<int>(_tuRecoveryWakeUpNewTurn);
 	_shortRadarRange = doc["shortRadarRange"].as<int>(_shortRadarRange);
+	_buildTimeReductionScaling = doc["buildTimeReductionScaling"].as<int>(_buildTimeReductionScaling);
 	_baseDefenseMapFromLocation = doc["baseDefenseMapFromLocation"].as<int>(_baseDefenseMapFromLocation);
 	_pediaReplaceCraftFuelWithRangeType = doc["pediaReplaceCraftFuelWithRangeType"].as<int>(_pediaReplaceCraftFuelWithRangeType);
 	_missionRatings = doc["missionRatings"].as<std::map<int, std::string> >(_missionRatings);
@@ -4704,16 +4708,19 @@ void Mod::loadExtraResources()
 		}
 	}
 
-	// Hack for hybrid UFO-based games
+	// Support for UFO-based mods and hybrid mods
 	if (_transparencyLUTs.empty() && !_transparencies.empty())
 	{
-		if (_palettes["PAL_BATTLESCAPE"] &&
-			_palettes["PAL_BATTLESCAPE_1"] &&
+		if (_palettes["PAL_BATTLESCAPE"])
+		{
+			Log(LOG_INFO) << "Creating transparency LUTs for PAL_BATTLESCAPE...";
+			createTransparencyLUT(_palettes["PAL_BATTLESCAPE"]);
+		}
+		if (_palettes["PAL_BATTLESCAPE_1"] &&
 			_palettes["PAL_BATTLESCAPE_2"] &&
 			_palettes["PAL_BATTLESCAPE_3"])
 		{
-			Log(LOG_INFO) << "Creating transparency LUTs for custom palettes...";
-			createTransparencyLUT(_palettes["PAL_BATTLESCAPE"]);
+			Log(LOG_INFO) << "Creating transparency LUTs for hybrid custom palettes...";
 			createTransparencyLUT(_palettes["PAL_BATTLESCAPE_1"]);
 			createTransparencyLUT(_palettes["PAL_BATTLESCAPE_2"]);
 			createTransparencyLUT(_palettes["PAL_BATTLESCAPE_3"]);

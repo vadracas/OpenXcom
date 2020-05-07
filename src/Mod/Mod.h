@@ -230,6 +230,7 @@ private:
 	bool _giveScoreAlsoForResearchedArtifacts, _statisticalBulletConservation, _stunningImprovesMorale;
 	int _tuRecoveryWakeUpNewTurn;
 	int _shortRadarRange;
+	int _buildTimeReductionScaling;
 	int _defeatScore, _defeatFunds;
 	std::pair<std::string, int> _alienFuel;
 	std::string _fontName, _finalResearch, _psiUnlockResearch, _fakeUnderwaterBaseUnlockResearch;
@@ -348,6 +349,7 @@ public:
 	static bool EXTENDED_ITEM_RELOAD_COST;
 	static bool EXTENDED_RUNNING_COST;
 	static bool EXTENDED_HWP_LOAD_ORDER;
+	static int EXTENDED_MELEE_REACTIONS;
 
 	// reset all the statics in all classes to default values
 	static void resetGlobalStatics();
@@ -767,6 +769,8 @@ public:
 	std::string getFontName() const;
 	/// Gets the maximum radar range still considered as short.
 	int getShortRadarRange() const;
+	/// Gets the custom scaling (defined by the modder) applied on the facility upgrade/build time reduction calculated by the game.
+	int getBuildTimeReductionScaling() const { return _buildTimeReductionScaling; }
 	/// Gets what type of information should be shown in craft articles for the fuel capacity/range
 	int getPediaReplaceCraftFuelWithRangeType() const;
 	/// Gets information on an interface element.

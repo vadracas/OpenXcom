@@ -1987,9 +1987,12 @@ void StatsForNerdsState::initItemList()
 		addInteger(ss, itemRule->getBulletSpeed(), "bulletSpeed");
 		addInteger(ss, itemRule->getExplosionSpeed(), "explosionSpeed");
 
-		addInteger(ss, itemRule->getVaporColor(), "vaporColor", -1);
-		addInteger(ss, itemRule->getVaporDensity(), "vaporDensity");
-		addIntegerPercent(ss, itemRule->getVaporProbability(), "vaporProbability", 15);
+		addInteger(ss, itemRule->getVaporColor(1), "vaporColor", -1);
+		addInteger(ss, itemRule->getVaporDensity(1), "vaporDensity");
+		addIntegerPercent(ss, itemRule->getVaporProbability(1), "vaporProbability", 15);
+		addInteger(ss, itemRule->getVaporColor(0), "vaporColorSurface", -1);
+		addInteger(ss, itemRule->getVaporDensity(0), "vaporDensitySurface");
+		addIntegerPercent(ss, itemRule->getVaporProbability(0), "vaporProbabilitySurface", 15);
 
 		addSection("{AI}", "", _white);
 		addInteger(ss, itemRule->getAttraction(), "attraction");
@@ -2449,6 +2452,7 @@ void StatsForNerdsState::initArmorList()
 		addInteger(ss, armorRule->getKneelHeight(), "kneelHeight", -1);
 		addInteger(ss, armorRule->getFloatHeight(), "floatHeight", -1);
 		addFloat(ss, armorRule->getOverKill(), "overKill", 0.5f);
+		addBoolean(ss, armorRule->getAllowTwoMainWeapons(), "allowTwoMainWeapons");
 		addBoolean(ss, armorRule->getInstantWoundRecovery(), "instantWoundRecovery");
 
 		addSection("{Basics}", "Stuff from the main article", _white, true);
@@ -2669,6 +2673,7 @@ void StatsForNerdsState::initFacilityList()
 
 	addInteger(ss, facilityRule->getMaxAllowedPerBase(), "maxAllowedPerBase");
 	addInteger(ss, facilityRule->getManaRecoveryPerDay(), "manaRecoveryPerDay");
+	addInteger(ss, facilityRule->getHealthRecoveryPerDay(), "healthRecoveryPerDay");
 	addFloat(ss, facilityRule->getSickBayAbsoluteBonus(), "sickBayAbsoluteBonus");
 	addFloat(ss, facilityRule->getSickBayRelativeBonus(), "sickBayRelativeBonus");
 
