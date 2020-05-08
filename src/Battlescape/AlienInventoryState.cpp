@@ -207,9 +207,6 @@ AlienInventoryState::AlienInventoryState(BattleUnit *unit)
 	}
 
 	// --------------------- DEBUG INDICATORS ---------------------
-	if (!Options::debug)
-		return;
-
 	auto weaponL = unit->getLeftHandWeapon();
 	if (weaponL)
 	{
