@@ -160,11 +160,10 @@ void Soldier::load(const YAML::Node& node, const Mod *mod, SavedGame *save, cons
 	_training = node["training"].as<bool>(_training);
 	_returnToTrainingWhenHealed = node["returnToTrainingWhenHealed"].as<bool>(_returnToTrainingWhenHealed);
 
-}
-// This is here just to fix older saves, can be removed in year 2020 :)
-if (isWounded())
-	_training = false;
-   else
+	// This is here just to fix older saves, can be removed in year 2020 :)
+	if (isWounded())
+		_training = false;
+	else
 		_returnToTrainingWhenHealed = false;
 
 	_improvement = node["improvement"].as<int>(_improvement);
@@ -214,6 +213,8 @@ if (isWounded())
 	_previousTransformations = node["previousTransformations"].as<std::map<std::string, int > >(_previousTransformations);
 	_transformationBonuses = node["transformationBonuses"].as<std::map<std::string, int > >(_transformationBonuses);
 	_scriptValues.load(node, shared);
+}
+
 /**
  * Saves the soldier to a YAML file.
  * @return YAML node.
